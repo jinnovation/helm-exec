@@ -1,4 +1,4 @@
-;;; helm-exec --- simple "application" execution framework for Helm  -*- lexical-binding: t; -*-
+;;; helm-exec --- simple execution framework for Helm -*- lexical-binding: t; -*-
 
 (require 'helm)
 
@@ -29,15 +29,39 @@ execution can be provided via ALT that defaults to nil.
                          (alternate . ,alt)))))
     (add-to-list 'helm-exec-applications entry)))
 
+(defun helm-exec--action/execute (selection)
+  "Action that executes the executable corresponding to the given
+  SELECTION."
+  (let* ((spec (alist-get (intern selection) helm-exec-applications))
+         (exec (alist-get 'executable spec)))
+    (funcall exec)))
+
+(defun helm-exec--action/alternate (selection)
+  "Action that executes the alternate executable corresponding to
+  the given SELECTION."
+  (let* ((spec (alist-get (intern selection) helm-exec-applications))
+         (exec (alist-get 'alternate spec)))
+    (if (not exec)
+        (message "No alternate execution for ID %s." selection)
+      (funcall exec))))
+
+(defun helm-exec--execution-candidates ()
+  (mapcar (lambda (asoc) (car asoc)) helm-exec-applications))
+
+(defconst helm-exec--actions
+  (helm-make-actions
+   "Execute" 'helm-exec--action/execute
+   "Alternate" 'helm-exec--action/alternate))
+
+(defconst helm-exec--exec-source
+  (helm-build-sync-source
+      "Available Applications"
+    :candidates 'helm-exec--execution-candidates
+    :action helm-exec--actions))
+
 (defun helm-exec-execute ()
   (interactive)
-  (helm :sources (helm-build-sync-source "Available Applications"
-                   :candidates (mapcar (lambda (asoc) (car asoc))
-                                       helm-exec-applications)
-                   :action (helm-make-actions
-                            "Execute" (lambda (selection)
-                                        (funcall (alist-get 'executable (alist-get (intern selection) helm-exec-applications))
-                                        ))))
+  (helm :sources helm-exec--exec-source 
         :buffer "Execute"
         :prompt helm-exec-prompt))
 
