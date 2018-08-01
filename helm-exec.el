@@ -107,7 +107,7 @@ execution can be provided via ALT that defaults to nil.
 (defun helm-exec-execute ()
   (interactive)
   (helm :sources helm-exec--exec-source 
-        :buffer "Execute"
+        :buffer "*helm execute*"
         :prompt helm-exec-prompt))
 
 (provide 'helm-exec)
