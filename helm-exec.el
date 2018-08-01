@@ -1,11 +1,11 @@
-;;; helm-exec --- simple execution framework for Helm -*- lexical-binding: t; -*-
+;;; helm-exec.el --- simple execution framework for Helm -*- lexical-binding: t; -*-
 
 ;;; Copyright © 2018-2018 Jonathan Jin <jjin082693@gmail.com>
 
 ;; Author: Jonathan Jin <jjin082693@gmail.com>
 ;; URL: https://github.com/jinnovation/helm-exec
 ;; Keywords: helm, execution, framework
-;; Version: 0.0.1
+;; Version: 0.1.0
 
 ;; TODO: Package-Requires
 
@@ -52,15 +52,16 @@
                        (list (const executable) function)
                        (list (const alternate) (choice function (const nil))))))
 
-(defun helm-exec-register-executable (exec &optional id alt)
+;; TODO: Update docstring to reflect plist arguments
+(defun helm-exec-register-executable (exec &rest args)
   "Register EXEC as a function to be accessible via
 `helm-exec-execute'. An explicit ID can be provided that the
 function will be listed as; if not provided, the function is
 listed under its own name. Similarly, an optional alternate
 execution can be provided via ALT that defaults to nil.
   "
-  (let* ((id (or id exec))
-         (alt (or alt nil))
+  (let* ((id (or (plist-get args :id) exec))
+         (alt (or (plist-get args :alt) nil))
          (entry `(,id . ((executable . ,exec)
                          (alternate . ,alt)))))
     (add-to-list 'helm-exec-applications entry)))
@@ -89,11 +90,19 @@ execution can be provided via ALT that defaults to nil.
    "Execute" 'helm-exec--action/execute
    "Alternate" 'helm-exec--action/alternate))
 
+(setq helm-exec-map
+      (let ((map (make-sparse-keymap)))
+        (define-key map (kbd "M-e") (lambda ()
+                                      (interactive)
+                                      (helm-exit-and-execute-action 'helm-exec--action/alternate)))
+        map))
+
 (defconst helm-exec--exec-source
   (helm-build-sync-source
       "Available Applications"
     :candidates 'helm-exec--execution-candidates
-    :action helm-exec--actions))
+    :action helm-exec--actions
+    :keymap helm-exec-map))
 
 (defun helm-exec-execute ()
   (interactive)
@@ -103,4 +112,4 @@ execution can be provided via ALT that defaults to nil.
 
 (provide 'helm-exec)
 
-;;; helm-exec ends here
+;;; helm-exec.el ends here
