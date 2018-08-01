@@ -4,7 +4,7 @@
 
 ;; Author: Jonathan Jin <jjin082693@gmail.com>
 ;; URL: https://github.com/jinnovation/helm-exec
-;; Keywords: helm, execution, framework
+;; Keywords: helm, execution
 ;; Version: 0.1.0
 
 ;; TODO: Package-Requires
